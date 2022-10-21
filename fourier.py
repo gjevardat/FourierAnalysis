@@ -81,30 +81,32 @@ def fourier_series(f,x,P,num_harmonics):
 #Utility function to plot fourier results
 def plot_fourier(f,x,A,B,freqs,H,SUM,num_harmonics):
     
-    plt.rcParams['figure.figsize'] = [8,8]
+    plt.rcParams['figure.figsize'] = [32,8]
     plt.rcParams.update({'font.size': 8})
     
-    fig, ax = plt.subplots(2, 2)
+    fig, ax = plt.subplots(1,4)
     cmap = get_cmap('tab20')
     colors = cmap.colors
-    ax[0][1].set_prop_cycle(color=colors)
+    ax[2].set_prop_cycle(color=colors)
 
     n = len(x)
 
-    ax[0][0].plot(x, f)
-    ax[0][0].set_title('Function to approximate')
+    ax[0].plot(x, f)
+    ax[0].set_title('Function to approximate')
+    
+    ax[1].plot(x, SUM)
+    ax[1].set_title('Fourier series')
     
     size = num_harmonics+1
     for k in range(1,size):
-        ax[0][1].plot(x, H[k])
-        ax[0][1].set_title('Number of Harmonics = ' + str(num_harmonics))
+        ax[2].plot(x, H[k])
+    ax[2].set_title('Number of Harmonics = ' + str(num_harmonics))
     
-    ax[1][0].plot(x, SUM)
-    ax[1][0].set_title('Fourier series')
+    
 
     #Plot harmonics A coefficients ( frequencies)
-    ax[1][1].plot( freqs,A,'.')
-    ax[1][1].set_title('Fourier coefficients')
+    ax[3].plot( freqs,A,'.')
+    ax[3].set_title('Fourier coefficients')
     plt.tight_layout()
     plt.show()
     
