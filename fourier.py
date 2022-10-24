@@ -2,8 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 
-#Compute and plot a f 2-step function starting at 0 on few period
-def step_function(dx,period,upperval,lowerval,num_periods):
+#Compute and plot a f step function starting at 0 on few period
+def step_function(period,upperval,lowerval,num_periods):
+    dx=0.01
     num_samples_1p = int(period/dx)
     x=np.linspace(0, num_periods*period, num_samples_1p*num_periods)
     f=np.zeros_like(x)
@@ -31,8 +32,8 @@ def square_function():
     return x, dx, f
 
 #Simple P-periodic triangle function defined on interval a,b and centered  on x0
-def triangle_function(dx,P,x0):
-    
+def triangle_function(P,x0):
+    dx=0.01
     x = np.arange(x0-P/2, x0+P/2, dx)
     f = np.zeros_like(x)
     n = len(x)
@@ -47,66 +48,72 @@ def triangle_function(dx,P,x0):
 
 def fourier_coeff(f,x,P,num_harmonics):
     #We also store coefficient A0, B0
-    size = num_harmonics+1 
+    size = num_harmonics
     dx = 0.01
     num_samples_1p = int(P/dx)
     A = np.zeros([size])
     B = np.zeros([size])
     freqs = np.zeros([size])
-
-    A[0] = 2/P*np.sum(f[:num_samples_1p]*np.ones_like(x[:num_samples_1p]))*dx
-    B[0] = 0 
     freqs[0] = 0
-    for i in range(1,size):
-        #print('Compute '+ str(i)+'-th harmonic coefficient')
+    for i in range(0,size):
         freqs[i] = (2*i*np.pi/P)
         A[i] = (2/P)*np.sum(f[:num_samples_1p] * np.cos(freqs[i]*x[:num_samples_1p] ))*dx
         B[i] = (2/P)*np.sum(f[:num_samples_1p] * np.sin(freqs[i]*x[:num_samples_1p] ))*dx
     return A, B, freqs
 
 def fourier_series(f,x,P,num_harmonics):
-    A, B, freqs= fourier_coeff(f, x, P, num_harmonics)
+    A, B, freqs= fourier_coeff(f, x, P, num_harmonics+1)
     #H0 stores constant function
-    size = num_harmonics+1 
+    size = num_harmonics+1
     H = np.zeros([size,len(x)])
     SUM = np.zeros([len(x)])
     H[0] = A[0]/2
     SUM = H[0]
+    ERR = np.zeros(num_harmonics+1)
     for i in range(1,size):
         H[i] = A[i] * np.cos(freqs[i]*x)  + B[i] * np.sin((freqs[i])*x)
         SUM += H[i]
+        ERR[i] = np.linalg.norm(f-SUM)/np.linalg.norm(f)
 
-    return A, B, freqs, SUM, H
+    return A, B, freqs, SUM, H,ERR
 
 #Utility function to plot fourier results
-def plot_fourier(f,x,A,B,freqs,H,SUM,num_harmonics):
+def plot_fourier(f,x,A,B,freqs,H,SUM,num_harmonics,ERR):
     
-    plt.rcParams['figure.figsize'] = [32,8]
-    plt.rcParams.update({'font.size': 8})
+    plt.rcParams['figure.figsize'] = [32,12]
+    plt.rcParams.update({'font.size': 12})
     
-    fig, ax = plt.subplots(1,4)
-    cmap = get_cmap('tab20')
-    colors = cmap.colors
-    ax[2].set_prop_cycle(color=colors)
+    fig, ax = plt.subplots(2,3)
+    
 
     n = len(x)
+    
+    cell = ax[0,0]
+    cell.plot(x,f)
+    cell.set_title('Function to approximate')
+    
+    cell = ax[0,1]
+    cell.plot(x, SUM)
+    cell.set_title('Fourier series')
+    
+    cell = ax[0,2]
+    cmap = get_cmap('tab20')
+    colors = cmap.colors
+    cell.set_prop_cycle(color=colors)
+    for k in range(1,num_harmonics+1):
+        cell.plot(x, H[k])
+    cell.set_title(str(num_harmonics)+ ' harmonics')
+    
+    cell = ax[1,0]
+    #Plot harmonics A coefficients
+    cell.plot(np.arange(0,num_harmonics),A[1:])
+    cell.set_yscale('log')
+    cell.set_title('Fourier coefficients')
+ 
+    cell = ax[1,1]               
+    cell.plot(np.arange(1,num_harmonics+1), ERR[1:])
+    cell.set_title('Relative residual error')
 
-    ax[0].plot(x, f)
-    ax[0].set_title('Function to approximate')
-    
-    ax[1].plot(x, SUM)
-    ax[1].set_title('Fourier series')
-    
-    size = num_harmonics+1
-    for k in range(1,size):
-        ax[2].plot(x, H[k])
-    ax[2].set_title('Number of Harmonics = ' + str(num_harmonics))
-    
-    
-
-    #Plot harmonics A coefficients ( frequencies)
-    ax[3].plot( freqs,A,'.')
-    ax[3].set_title('Fourier coefficients')
     plt.tight_layout()
     plt.show()
     
